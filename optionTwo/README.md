@@ -38,6 +38,11 @@ terraform init
 terraform plan -var-file="terraform_nonprod.tfvars"
 terraform apply -var-file="terraform_nonprod.tfvars"
 
+---
+
+## ⚠️ Required: Azure Subscription ID
+
+Before deploying, edit `terraform.tf` and set the `subscription_id` value in the `provider "azurerm"` block to your Azure Subscription ID.
 # Production environment
 terraform init
 terraform plan -var-file="terraform_prod.tfvars"

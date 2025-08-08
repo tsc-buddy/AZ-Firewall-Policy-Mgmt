@@ -126,6 +126,11 @@ Option 2 (YAML Configuration) strikes the perfect balance between:
 For most organizations, Option 2 provides the best long-term solution for managing Azure Firewall policies.
 
 ## 🔧 **Common Configuration**
+---
+
+## ⚠️ Required: Azure Subscription ID
+
+Before deploying any option, edit the relevant `terraform.tf` file and set the `subscription_id` value in the `provider "azurerm"` block to your Azure Subscription ID.
 
 All options deploy to:
 - **Location**: Australia East

@@ -42,6 +42,12 @@ terraform apply -var-file="terraform.tfvars"
 - Network segment abstraction requirements
 - Teams that prefer compositional over declarative approach
 
+---
+
+## ⚠️ Required: Azure Subscription ID
+
+Before deploying, edit `terraform.tf` and set the `subscription_id` value in the `provider "azurerm"` block to your Azure Subscription ID.
+
 ## 📝 Configuration
 
 ### Enable/Disable Rule Sets

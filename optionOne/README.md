@@ -42,6 +42,12 @@ terraform apply -var-file="terraform.tfvars"
 - When type safety is critical
 - Simple, single-environment deployments
 
+---
+
+## ⚠️ Required: Azure Subscription ID
+
+Before deploying, edit `terraform.tf` and set the `subscription_id` value in the `provider "azurerm"` block to your Azure Subscription ID.
+
 ## 📝 Adding New Rules
 
 To add new rules, modify the `firewall_rule_collection_groups` variable in `terraform.tfvars`:
