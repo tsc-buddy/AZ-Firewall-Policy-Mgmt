@@ -1,0 +1,60 @@
+# Non-production environment - More permissive firewall rules
+avd_core:
+  priority: 1000
+  network_rule_collections:
+    - action: "Allow"
+      name: "AVDCoreNetworkRules"
+      priority: 500
+      rules:
+        - name: "Login to Microsoft"
+          source_addresses: ["10.100.0.0/16"]  # Broader range for nonprod
+          destination_fqdns: ["login.microsoftonline.com"]
+          protocols: ["TCP"]
+          destination_ports: ["443"]
+        - name: "AVD"
+          source_addresses: ["10.100.0.0/16"]
+          destination_addresses: ["WindowsVirtualDesktop", "AzureFrontDoor.Frontend", "AzureMonitor"]
+          protocols: ["TCP"]
+          destination_ports: ["443"]
+        - name: "DNS"
+          source_addresses: ["10.100.0.0/16"]
+          destination_addresses: ["AzureDNS"]
+          protocols: ["TCP", "UDP"]
+          destination_ports: ["53"]
+
+# Non-production tools and debugging
+nonprod_tools:
+  priority: 1500
+  network_rule_collections:
+    - action: "Allow"
+      name: "NonProductionTools"
+      priority: 500
+      rules:
+        - name: "GitHub"
+          source_addresses: ["10.0.0.0/8"]
+          destination_fqdns: ["github.com", "api.github.com", "*.githubusercontent.com"]
+          protocols: ["TCP"]
+          destination_ports: ["443", "22"]
+        - name: "NPM Registry"
+          source_addresses: ["10.0.0.0/8"]
+          destination_fqdns: ["registry.npmjs.org", "*.npmjs.com"]
+          protocols: ["TCP"]
+          destination_ports: ["443"]
+        - name: "Docker Hub"
+          source_addresses: ["10.0.0.0/8"]
+          destination_fqdns: ["registry-1.docker.io", "*.docker.com", "*.docker.io"]
+          protocols: ["TCP"]
+          destination_ports: ["443"]
+
+internet:
+  priority: 9000  # Higher priority (less restrictive) for nonprod
+  network_rule_collections:
+    - action: "Allow"
+      name: "InternetNetworkRules"
+      priority: 500
+      rules:
+        - name: "Internet"
+          source_addresses: ["10.0.0.0/8"]  # Broader range
+          destination_addresses: ["*"]
+          protocols: ["TCP", "UDP"]
+          destination_ports: ["443", "80", "8080", "3000", "8000"]  # Additional nonprod ports
