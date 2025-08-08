@@ -6,7 +6,7 @@ This repository provides three different approaches to parameterize Azure Firewa
 
 | Option | Approach | Best For | Complexity | Maintainability | Scalability |
 |--------|----------|----------|------------|-----------------|-------------|
-| **Option 1** | Complex Variables | Small teams, < 50 rules | High | Low | Average |
+| **Option 1** | Complex-ish Variables | <80 Rulesets | High | Low | Average |
 | **Option 2** ⭐ | YAML Files | Most scenarios | Low | High | Excellent |
 | **Option 3** | Rule Templates | Standardized patterns | Medium | Medium | Great |
 
