@@ -1,0 +1,79 @@
+# Production environment - Restrictive firewall rules
+avd_core:
+  priority: 1000
+  network_rule_collections:
+    - action: "Allow"
+      name: "AVDCoreNetworkRules"
+      priority: 500
+      rules:
+        - name: "Login to Microsoft"
+          source_addresses: ["10.100.0.0/24"]  # Specific subnet only
+          destination_fqdns: ["login.microsoftonline.com"]
+          protocols: ["TCP"]
+          destination_ports: ["443"]
+        - name: "AVD"
+          source_addresses: ["10.100.0.0/24"]
+          destination_addresses: ["WindowsVirtualDesktop", "AzureFrontDoor.Frontend", "AzureMonitor"]
+          protocols: ["TCP"]
+          destination_ports: ["443"]
+        - name: "GCS"
+          source_addresses: ["10.100.0.0/24"]
+          destination_fqdns: ["gcs.prod.monitoring.core.windows.net"]
+          protocols: ["TCP"]
+          destination_ports: ["443"]
+        - name: "DNS"
+          source_addresses: ["10.100.0.0/24"]
+          destination_addresses: ["AzureDNS"]
+          protocols: ["TCP", "UDP"]
+          destination_ports: ["53"]
+        - name: "KMS"
+          source_addresses: ["10.100.0.0/24"]
+          destination_fqdns: ["kms.core.windows.net"]
+          protocols: ["TCP"]
+          destination_ports: ["1688"]
+
+m365:
+  priority: 2000
+  network_rule_collections:
+    - action: "Allow"
+      name: "M365NetworkRules"
+      priority: 500
+      rules:
+        - name: "M365"
+          source_addresses: ["10.0.0.0/24"]  # Specific production subnet
+          destination_addresses: ["Office365.Common.Allow.Required"]
+          protocols: ["TCP"]
+          destination_ports: ["443"]
+
+# Production security and monitoring
+security_monitoring:
+  priority: 2500
+  network_rule_collections:
+    - action: "Allow"
+      name: "SecurityMonitoringRules"
+      priority: 500
+      rules:
+        - name: "Azure Security Center"
+          source_addresses: ["10.0.0.0/16"]
+          destination_addresses: ["AzureSecurityCenter"]
+          protocols: ["TCP"]
+          destination_ports: ["443"]
+        - name: "Windows Defender ATP"
+          source_addresses: ["10.0.0.0/16"]
+          destination_fqdns: ["*.securitycenter.windows.com"]
+          protocols: ["TCP"]
+          destination_ports: ["443"]
+
+# Very restrictive internet access for production
+internet:
+  priority: 8000
+  network_rule_collections:
+    - action: "Allow"
+      name: "RestrictedInternetRules"
+      priority: 500
+      rules:
+        - name: "HTTPS Only"
+          source_addresses: ["10.0.0.0/24"]  # Only specific production subnet
+          destination_addresses: ["*"]
+          protocols: ["TCP"]
+          destination_ports: ["443"]  # HTTPS only
