@@ -6,7 +6,7 @@ This repository provides three different approaches to parameterize Azure Firewa
 
 | Option | Approach | Best For | Complexity | Maintainability | Scalability |
 |--------|----------|----------|------------|-----------------|-------------|
-| **Option 1** | Complex-ish Variables | <80 Rulesets | High | Low | Average |
+| **Option 1** | Complex-ish Variables | <80 Rules | High | Low | Average |
 | **Option 2** ⭐ | YAML Files | Most scenarios | Low | High | Excellent |
 | **Option 3** | Rule Templates | Standardized patterns | Medium | Medium | Great |
 
@@ -65,8 +65,8 @@ terraform apply -var-file="terraform.tfvars"
 - ✅ Human-readable, version-control friendly configuration
 
 ### **Choose Option 1 (Variables)** if you have:
-- Small, unchanging rule sets (< 50 rules)
-- Team consisting entirely of Terraform experts
+- Small, unchanging rule sets (< 80 rules)
+- Team has good TF skills
 - Need for maximum type safety and validation
 - Preference for pure Terraform approach
 
@@ -74,7 +74,7 @@ terraform apply -var-file="terraform.tfvars"
 - Standardized, repeatable rule patterns
 - Network segment abstraction
 - Compositional approach to rule management
-- Selective enabling/disabling of rule groups
+- Selective enabling/disabling of rule groups - Cool feature!
 
 ## 📖 **Getting Started**
 
