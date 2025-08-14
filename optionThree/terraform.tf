@@ -14,5 +14,5 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id = ""
+  subscription_id = "a97e5e9d-4ea4-427a-8646-8ab65ea003a5"  # Dummy ID for validation
 }

@@ -27,28 +27,36 @@ variable "resource_group_name" {
   description = "The name of the resource group"
 }
 
-variable "network_segments" {
-  type = map(string)
-  description = "Map of network segments and their CIDR blocks"
-  default = {
-    avd_subnet = "10.100.0.0/24"
-    general_subnet = "10.0.0.0/24"
-  }
-}
-
-variable "enabled_rule_sets" {
-  type = list(string)
-  description = "List of rule sets to enable"
-  default = ["avd_core", "avd_optional", "m365", "internet"]
-}
-
-variable "rule_collection_group_priorities" {
-  type = map(number)
-  description = "Priority mapping for rule collection groups"
-  default = {
-    avd_core = 1000
-    avd_optional = 1050
-    m365 = 2000
-    internet = 3000
-  }
+variable "firewall_rules" {
+  type = map(object({
+    priority      = number
+    source_subnet = string
+    network_collections = optional(list(object({
+      action   = string
+      name     = string
+      priority = number
+      rules = list(object({
+        name                  = string
+        destination_fqdns     = optional(list(string))
+        destination_addresses = optional(list(string))
+        protocols             = list(string)
+        destination_ports     = list(string)
+      }))
+    })), [])
+    application_collections = optional(list(object({
+      action   = string
+      name     = string
+      priority = number
+      rules = list(object({
+        name                  = string
+        destination_fqdns     = optional(list(string))
+        destination_fqdn_tags = optional(list(string))
+        protocols = list(object({
+          port = number
+          type = string
+        }))
+      }))
+    })), [])
+  }))
+  description = "Firewall rules configuration with direct rule declarations"
 }

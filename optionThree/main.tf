@@ -1,4 +1,4 @@
-# Option 3: Modular approach with rule templates
+# Option 3A: Direct rule declaration approach - no complex templates
 
 resource "azurerm_resource_group" "azfw-rg" {
   location = var.location
@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "azfw-rg" {
 }
 
 module "firewall_policy" {
-  source = "Azure/avm-res-network-firewallpolicy/azurerm"
+  source              = "Azure/avm-res-network-firewallpolicy/azurerm"
   enable_telemetry    = var.enable_telemetry
   name                = var.firewall_policy_name
   location            = var.location
@@ -16,10 +16,10 @@ module "firewall_policy" {
   }
 }
 
-# Dynamic rule collection groups using template-based approach
+# Dynamic rule collection groups using direct rule declarations
 module "rule_collection_groups" {
   source   = "Azure/avm-res-network-firewallpolicy/azurerm//modules/rule_collection_groups"
-  for_each = local.enabled_rule_collections
+  for_each = var.firewall_rules
 
   firewall_policy_rule_collection_group_firewall_policy_id = module.firewall_policy.resource.id
   firewall_policy_rule_collection_group_name               = "${title(each.key)}RuleCollectionGroup"
@@ -27,16 +27,16 @@ module "rule_collection_groups" {
 
   # Network rule collections
   firewall_policy_rule_collection_group_network_rule_collection = [
-    for collection in try(each.value.config.network_collections, []) : {
+    for collection in each.value.network_collections : {
       action   = collection.action
       name     = collection.name
       priority = collection.priority
       rule = [
         for rule in collection.rules : {
           name                  = rule.name
-          source_addresses      = [collection.source_subnet]
-          destination_fqdns     = try(rule.destination_fqdns, null)
-          destination_addresses = try(rule.destination_addresses, null)
+          source_addresses      = [each.value.source_subnet]
+          destination_fqdns     = rule.destination_fqdns
+          destination_addresses = rule.destination_addresses
           protocols             = rule.protocols
           destination_ports     = rule.destination_ports
         }
@@ -46,16 +46,16 @@ module "rule_collection_groups" {
 
   # Application rule collections
   firewall_policy_rule_collection_group_application_rule_collection = [
-    for collection in try(each.value.config.application_collections, []) : {
+    for collection in each.value.application_collections : {
       action   = collection.action
       name     = collection.name
       priority = collection.priority
       rule = [
         for rule in collection.rules : {
           name                  = rule.name
-          source_addresses      = [collection.source_subnet]
-          destination_fqdns     = try(rule.destination_fqdns, null)
-          destination_fqdn_tags = try(rule.destination_fqdn_tags, null)
+          source_addresses      = [each.value.source_subnet]
+          destination_fqdns     = rule.destination_fqdns
+          destination_fqdn_tags = rule.destination_fqdn_tags
           protocols             = rule.protocols
         }
       ]
