@@ -59,6 +59,54 @@ terraform plan -var-file="terraform.tfvars"
 terraform apply -var-file="terraform.tfvars"
 ```
 
+## ✨ **Key Improvements in Option 3A**
+
+### **🔀 Multiple Source Networks**
+Support for multiple source networks in a single rule collection group:
+```hcl
+avd = {
+  source_addresses = ["10.100.0.0/24", "10.101.0.0/24", "192.168.1.0/24"]
+  # Rules apply to traffic from ANY of these source networks
+}
+```
+
+### **🔓 Optional Destination Ports**
+ICMP rules and other protocols that don't require ports:
+```hcl
+{
+  name                  = "ICMP Echo"
+  destination_addresses = ["AzureDNS"]
+  protocols             = ["ICMP"]
+  # destination_ports not needed for ICMP - just omit it!
+}
+```
+
+### **� DNAT Rules for Public Services**
+Expose internal services to the internet with destination NAT:
+```hcl
+nat_collections = [
+  {
+    action = "Dnat"
+    rules = [
+      {
+        name               = "WebServer"
+        destination_address = "20.53.1.100"    # Firewall public IP
+        destination_ports  = ["80", "443"]
+        translated_address = "10.0.1.10"       # Internal server
+        translated_port    = "80"
+        protocols          = ["TCP"]
+      }
+    ]
+  }
+]
+```
+
+### **�🎯 Real-World Flexibility**
+- **Multi-site networks**: Configure rules for multiple office locations
+- **ICMP monitoring**: Add ping/traceroute rules without dummy ports
+- **Protocol-specific rules**: Each rule can omit irrelevant fields
+- **DNAT support**: Expose internal services to the internet with destination NAT
+
 ## 📋 **Rule Structure Explained**
 
 ### **Top-Level Structure**
@@ -66,9 +114,10 @@ terraform apply -var-file="terraform.tfvars"
 firewall_rules = {
   rule_collection_name = {
     priority                = number        # Rule collection group priority
-    source_subnet          = "CIDR"        # Source network for all rules
+    source_addresses       = ["CIDR", ...]  # Multiple source networks supported
     network_collections    = [...]         # Layer 4 network rules
     application_collections = [...]        # Layer 7 application rules
+    nat_collections        = [...]         # DNAT rules for exposing services
   }
 }
 ```
@@ -87,7 +136,7 @@ network_collections = [
         destination_fqdns = ["example.com"]           # OR
         destination_addresses = ["10.0.0.0/24", "AzureDNS"]  # IP/Service Tags
         protocols         = ["TCP", "UDP"]
-        destination_ports = ["443", "80"]
+        destination_ports = ["443", "80"]  # OPTIONAL - omit for ICMP rules
       }
     ]
   }
@@ -119,6 +168,29 @@ application_collections = [
 ]
 ```
 
+### **NAT Rule Collections (DNAT)**
+Used for exposing internal services to the internet by translating destination addresses and ports:
+```hcl
+nat_collections = [
+  {
+    action   = "Dnat"           # Always "Dnat" for destination NAT
+    name     = "DNATRules"
+    priority = 100             # Lower numbers = higher priority
+    rules = [
+      {
+        name               = "WebServer"
+        source_addresses   = ["*"]                  # OR restrict to specific sources
+        destination_address = "20.53.1.100"        # Firewall's public IP
+        destination_ports  = ["80", "443"]         # Public ports
+        translated_address = "10.0.1.10"           # Internal server IP
+        translated_port    = "80"                   # Internal port
+        protocols          = ["TCP"]
+      }
+    ]
+  }
+]
+```
+
 ## 🛠 **Common Configuration Tasks**
 
 ### **Adding a New Rule to Existing Collection**
@@ -127,8 +199,8 @@ To add a rule to the `avd` rule collection group:
 
 ```hcl
 avd = {
-  priority      = 1000
-  source_subnet = "10.100.0.0/24"
+  priority         = 1000
+  source_addresses = ["10.100.0.0/24", "10.101.0.0/24"]  # Multiple networks supported
   network_collections = [
     {
       action   = "Allow"
@@ -178,8 +250,8 @@ firewall_rules = {
   
   # New custom collection
   database_access = {
-    priority      = 2500
-    source_subnet = "10.200.0.0/24"
+    priority         = 2500
+    source_addresses = ["10.200.0.0/24", "10.201.0.0/24"]  # Multiple source networks
     network_collections = [
       {
         action   = "Allow"
@@ -217,8 +289,8 @@ resource_group_name  = "azfw-rg-dev"
 
 firewall_rules = {
   avd_core = {
-    priority      = 1000
-    source_subnet = "10.100.0.0/16"  # Broader range for dev
+    priority         = 1000
+    source_addresses = ["10.100.0.0/16"]  # Broader range for dev
     # ... rules
   }
 }
@@ -231,8 +303,8 @@ resource_group_name  = "azfw-rg-prod"
 
 firewall_rules = {
   avd_core = {
-    priority      = 1000
-    source_subnet = "10.100.0.0/24"  # Restricted range for prod
+    priority         = 1000
+    source_addresses = ["10.100.0.0/24"]  # Restricted range for prod
     # ... rules
   }
 }
@@ -243,6 +315,57 @@ Deploy with:
 terraform plan -var-file="terraform-dev.tfvars"    # For development
 terraform plan -var-file="terraform-prod.tfvars"   # For production
 ```
+
+### **Adding DNAT Rules for Public Services**
+
+To expose internal services to the internet, add a DNAT rule collection:
+
+```hcl
+firewall_rules = {
+  # ... existing collections ...
+  
+  # Public services exposed via DNAT
+  public_services = {
+    priority         = 4000  # Lower priority than outbound rules
+    source_addresses = ["*"] # Allow from any source (or restrict as needed)
+    network_collections = []
+    application_collections = []
+    nat_collections = [
+      {
+        action   = "Dnat"
+        name     = "PublicWebServices"
+        priority = 100
+        rules = [
+          {
+            name               = "WebServer"
+            destination_address = "20.53.1.100"    # Your firewall's public IP
+            destination_ports  = ["80", "443"]
+            translated_address = "10.0.1.10"       # Internal web server
+            translated_port    = "80"               # Internal port
+            protocols          = ["TCP"]
+          },
+          {
+            name               = "CustomApp"
+            source_addresses   = ["203.0.113.0/24"] # Restrict to specific sources
+            destination_address = "20.53.1.100"
+            destination_ports  = ["8080"]
+            translated_address = "10.0.1.20"
+            translated_port    = "3000"             # Different internal port
+            protocols          = ["TCP"]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Key Points for DNAT Rules:**
+- `destination_address` = Your Azure Firewall's public IP address
+- `translated_address` = Internal server IP behind the firewall
+- `translated_port` = Can be different from `destination_ports`
+- Lower priority numbers = higher precedence
+- Use specific `source_addresses` for security
 
 ## 🔍 **Troubleshooting & Validation**
 

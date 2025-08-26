@@ -34,11 +34,11 @@ module "rule_collection_groups" {
       rule = [
         for rule in collection.rules : {
           name                  = rule.name
-          source_addresses      = [each.value.source_subnet]
+          source_addresses      = each.value.source_addresses  # Now supports multiple addresses
           destination_fqdns     = rule.destination_fqdns
           destination_addresses = rule.destination_addresses
           protocols             = rule.protocols
-          destination_ports     = rule.destination_ports
+          destination_ports     = rule.destination_ports != null ? rule.destination_ports : []
         }
       ]
     }
@@ -53,10 +53,30 @@ module "rule_collection_groups" {
       rule = [
         for rule in collection.rules : {
           name                  = rule.name
-          source_addresses      = [each.value.source_subnet]
+          source_addresses      = each.value.source_addresses  # Now supports multiple addresses
           destination_fqdns     = rule.destination_fqdns
           destination_fqdn_tags = rule.destination_fqdn_tags
           protocols             = rule.protocols
+        }
+      ]
+    }
+  ]
+
+  # NAT rule collections (DNAT)
+  firewall_policy_rule_collection_group_nat_rule_collection = [
+    for collection in each.value.nat_collections : {
+      action   = collection.action
+      name     = collection.name
+      priority = collection.priority
+      rule = [
+        for rule in collection.rules : {
+          name               = rule.name
+          source_addresses   = rule.source_addresses != null ? rule.source_addresses : each.value.source_addresses
+          destination_address = rule.destination_address
+          destination_ports  = rule.destination_ports
+          translated_address = rule.translated_address
+          translated_port    = rule.translated_port
+          protocols          = rule.protocols
         }
       ]
     }
