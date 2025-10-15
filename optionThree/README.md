@@ -62,11 +62,13 @@ terraform apply -var-file="terraform.tfvars"
 ## ✨ **Key Improvements in Option 3A**
 
 ### **🔀 Multiple Source Networks**
-Support for multiple source networks in a single rule collection group:
+Support for multiple source networks in individual rules:
 ```hcl
-avd = {
+{
+  name             = "Multi-Source Rule"
   source_addresses = ["10.100.0.0/24", "10.101.0.0/24", "192.168.1.0/24"]
-  # Rules apply to traffic from ANY of these source networks
+  # This rule applies to traffic from ANY of these source networks
+  # Each rule explicitly defines its allowed sources
 }
 ```
 
@@ -114,13 +116,54 @@ nat_collections = [
 firewall_rules = {
   rule_collection_name = {
     priority                = number        # Rule collection group priority
-    source_addresses       = ["CIDR", ...]  # Multiple source networks supported
     network_collections    = [...]         # Layer 4 network rules
     application_collections = [...]        # Layer 7 application rules
     nat_collections        = [...]         # DNAT rules for exposing services
   }
 }
 ```
+
+### **🎯 Rule-Level Source Control**
+All source addresses are defined at the individual rule level, providing maximum granular control:
+
+**Example:**
+```hcl
+mixed_sources = {
+  priority = 3500
+  network_collections = [
+    {
+      action   = "Allow"
+      name     = "GranularSourceRules"
+      priority = 100
+      rules = [
+        {
+          name              = "Admin Access"
+          source_addresses  = ["10.200.1.0/24", "10.200.2.0/24"]  # Only admin subnets
+          destination_fqdns = ["admin.contoso.com"]
+          protocols         = ["TCP"]
+          destination_ports = ["443"]
+        },
+        {
+          name              = "General Access"
+          source_addresses  = ["10.200.0.0/24"]  # General users subnet
+          destination_fqdns = ["public.contoso.com"]
+          protocols         = ["TCP"]
+          destination_ports = ["443"]
+        },
+        {
+          name              = "VIP Access"
+          source_addresses  = ["10.200.10.0/24"]  # VIP subnet only
+          destination_fqdns = ["vip.contoso.com"]
+          protocols         = ["TCP"]
+          destination_ports = ["443"]
+        }
+      ]
+    }
+  ]
+}
+```
+
+This approach ensures every rule explicitly declares its allowed source networks, eliminating ambiguity and providing ultimate flexibility for complex network scenarios.
 
 ### **Network Rule Collections**
 Used for Layer 4 filtering (IP, ports, protocols):
@@ -132,11 +175,12 @@ network_collections = [
     priority = 500             # Priority within the group
     rules = [
       {
-        name              = "Rule Name"
-        destination_fqdns = ["example.com"]           # OR
+        name                  = "Rule Name"
+        source_addresses      = ["10.1.0.0/24"]  # REQUIRED - Define allowed source networks
+        destination_fqdns     = ["example.com"]           # OR
         destination_addresses = ["10.0.0.0/24", "AzureDNS"]  # IP/Service Tags
-        protocols         = ["TCP", "UDP"]
-        destination_ports = ["443", "80"]  # OPTIONAL - omit for ICMP rules
+        protocols             = ["TCP", "UDP"]
+        destination_ports     = ["443", "80"]  # OPTIONAL - omit for ICMP rules
       }
     ]
   }
@@ -153,8 +197,9 @@ application_collections = [
     priority = 600
     rules = [
       {
-        name              = "HTTPS Traffic"
-        destination_fqdns = ["*.microsoft.com"]       # OR
+        name                  = "HTTPS Traffic"
+        source_addresses      = ["10.1.0.0/24"]  # REQUIRED - Define allowed source networks
+        destination_fqdns     = ["*.microsoft.com"]       # OR
         destination_fqdn_tags = ["WindowsUpdate"]     # Azure service tags
         protocols = [
           {
@@ -179,7 +224,7 @@ nat_collections = [
     rules = [
       {
         name               = "WebServer"
-        source_addresses   = ["*"]                  # OR restrict to specific sources
+        source_addresses   = ["*"]                  # REQUIRED - "*" for any source OR restrict to specific networks
         destination_address = "20.53.1.100"        # Firewall's public IP
         destination_ports  = ["80", "443"]         # Public ports
         translated_address = "10.0.1.10"           # Internal server IP
@@ -200,7 +245,6 @@ To add a rule to the `avd` rule collection group:
 ```hcl
 avd = {
   priority         = 1000
-  source_addresses = ["10.100.0.0/24", "10.101.0.0/24"]  # Multiple networks supported
   network_collections = [
     {
       action   = "Allow"
@@ -212,6 +256,7 @@ avd = {
         # Add your new core rule here
         {
           name              = "Custom AVD Service"
+          source_addresses  = ["10.100.0.0/24", "10.101.0.0/24"]
           destination_fqdns = ["myavd.company.com"]
           protocols         = ["TCP"]
           destination_ports = ["8080"]
@@ -228,6 +273,7 @@ avd = {
         # Add your new optional rule here
         {
           name              = "Custom Optional Service"
+          source_addresses  = ["10.100.0.0/24", "10.101.0.0/24"]
           destination_fqdns = ["optional.company.com"]
           protocols         = ["TCP"]
           destination_ports = ["9090"]
@@ -251,7 +297,6 @@ firewall_rules = {
   # New custom collection
   database_access = {
     priority         = 2500
-    source_addresses = ["10.200.0.0/24", "10.201.0.0/24"]  # Multiple source networks
     network_collections = [
       {
         action   = "Allow"
@@ -290,7 +335,7 @@ resource_group_name  = "azfw-rg-dev"
 firewall_rules = {
   avd_core = {
     priority         = 1000
-    source_addresses = ["10.100.0.0/16"]  # Broader range for dev
+    # Source addresses defined at individual rule level for granular control
     # ... rules
   }
 }
@@ -304,7 +349,7 @@ resource_group_name  = "azfw-rg-prod"
 firewall_rules = {
   avd_core = {
     priority         = 1000
-    source_addresses = ["10.100.0.0/24"]  # Restricted range for prod
+    # Source addresses defined at individual rule level for stricter production control
     # ... rules
   }
 }
@@ -327,7 +372,6 @@ firewall_rules = {
   # Public services exposed via DNAT
   public_services = {
     priority         = 4000  # Lower priority than outbound rules
-    source_addresses = ["*"] # Allow from any source (or restrict as needed)
     network_collections = []
     application_collections = []
     nat_collections = [

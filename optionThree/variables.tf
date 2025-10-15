@@ -30,13 +30,13 @@ variable "resource_group_name" {
 variable "firewall_rules" {
   type = map(object({
     priority        = number
-    source_addresses = list(string)  # Changed from source_subnet to support multiple sources
     network_collections = optional(list(object({
       action   = string
       name     = string
       priority = number
       rules = list(object({
         name                  = string
+        source_addresses      = list(string)  # Required at rule level only
         destination_fqdns     = optional(list(string))
         destination_addresses = optional(list(string))
         protocols             = list(string)
@@ -49,6 +49,7 @@ variable "firewall_rules" {
       priority = number
       rules = list(object({
         name                  = string
+        source_addresses      = list(string)  # Required at rule level only
         destination_fqdns     = optional(list(string))
         destination_fqdn_tags = optional(list(string))
         protocols = list(object({
@@ -63,7 +64,7 @@ variable "firewall_rules" {
       priority = number
       rules = list(object({
         name               = string
-        source_addresses   = optional(list(string))  # Override source if needed per rule
+        source_addresses   = list(string)  # Required at rule level only
         destination_address = string                 # Public IP address
         destination_ports  = list(string)
         translated_address = string                  # Internal IP address
@@ -72,5 +73,5 @@ variable "firewall_rules" {
       }))
     })), [])
   }))
-  description = "Firewall rules configuration with direct rule declarations. Now supports multiple source addresses and optional destination ports."
+  description = "Firewall rules configuration with direct rule declarations. Source addresses are defined at the individual rule level for maximum granular control."
 }

@@ -34,7 +34,7 @@ module "rule_collection_groups" {
       rule = [
         for rule in collection.rules : {
           name                  = rule.name
-          source_addresses      = each.value.source_addresses  # Now supports multiple addresses
+          source_addresses      = rule.source_addresses  # Required at rule level
           destination_fqdns     = rule.destination_fqdns
           destination_addresses = rule.destination_addresses
           protocols             = rule.protocols
@@ -53,7 +53,7 @@ module "rule_collection_groups" {
       rule = [
         for rule in collection.rules : {
           name                  = rule.name
-          source_addresses      = each.value.source_addresses  # Now supports multiple addresses
+          source_addresses      = rule.source_addresses  # Required at rule level
           destination_fqdns     = rule.destination_fqdns
           destination_fqdn_tags = rule.destination_fqdn_tags
           protocols             = rule.protocols
@@ -71,7 +71,7 @@ module "rule_collection_groups" {
       rule = [
         for rule in collection.rules : {
           name               = rule.name
-          source_addresses   = rule.source_addresses != null ? rule.source_addresses : each.value.source_addresses
+          source_addresses   = rule.source_addresses  # Required at rule level
           destination_address = rule.destination_address
           destination_ports  = rule.destination_ports
           translated_address = rule.translated_address
