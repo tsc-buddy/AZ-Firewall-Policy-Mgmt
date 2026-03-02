@@ -29,11 +29,13 @@ locals {
   # ─── IP Group ID Lookup ─────────────────────────────────────────────────────
   # Resolves stamp IP group keys to Azure resource IDs.
   # Use these keys in firewall_rules.tfvars via source_ip_group_keys / destination_ip_group_keys:
+  #   "<stamp>-dev"      e.g. "aklc-dev"
   #   "<stamp>-test"     e.g. "aklc-test"
   #   "<stamp>-preprod"  e.g. "aklc-preprod"
   #   "<stamp>-prod"     e.g. "aklc-prod"
   #   "<stamp>-identity" e.g. "aklc-identity"
   ip_groups = merge(
+    { for k, v in azurerm_ip_group.stamp_dev : "${k}-dev" => v.id },
     { for k, v in azurerm_ip_group.stamp_test : "${k}-test" => v.id },
     { for k, v in azurerm_ip_group.stamp_preprod : "${k}-preprod" => v.id },
     { for k, v in azurerm_ip_group.stamp_prod : "${k}-prod" => v.id },

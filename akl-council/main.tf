@@ -7,7 +7,17 @@ resource "azurerm_resource_group" "hub" {
 }
 # ─── Stamp IP Groups ───────────────────────────────────────────────────────────────────
 # No AVM module exists for azurerm_ip_group; native resource used directly.
-# Keys available in firewall_rules.tfvars: "<stamp>-test", "<stamp>-preprod", "<stamp>-prod", "<stamp>-identity"
+# Keys available in firewall_rules.tfvars: "<stamp>-dev", "<stamp>-test", "<stamp>-preprod", "<stamp>-prod", "<stamp>-identity"
+
+resource "azurerm_ip_group" "stamp_dev" {
+  for_each = var.stamps
+
+  name                = "ipg-${each.key}-dev-${local.ipg_suffix}"
+  location            = azurerm_resource_group.hub.location
+  resource_group_name = azurerm_resource_group.hub.name
+  cidrs               = [each.value.dev_address_prefix]
+  tags                = local.tags
+}
 
 resource "azurerm_ip_group" "stamp_test" {
   for_each = var.stamps

@@ -34,10 +34,7 @@ log_analytics_workspace_id = "/subscriptions/a97e5e9d-4ea4-427a-8646-8ab65ea003a
 
 # ─── Tags ──────────────────────────────────────────────────────────────────────
 # These are merged with the mandatory tags defined in locals.tf.
-tags = {
-  cost_centre = "IT-001"
-  owner       = "platform-team"
-}
+tags = {}
 
 # ─── Stamps ────────────────────────────────────────────────────────────────────
 # Each stamp = one customer environment (3 workload VNets + 1 identity spoke).
@@ -45,21 +42,24 @@ tags = {
 # Replace placeholder CIDRs with actual VNet address prefixes.
 stamps = {
   aklc = {
-    test_address_prefix     = "10.10.0.0/24"
-    preprod_address_prefix  = "10.11.0.0/24"
-    prod_address_prefix     = "10.12.0.0/24"
-    identity_address_prefix = "10.10.100.0/24"
+    dev_address_prefix      = "10.132.0.0/23"
+    test_address_prefix     = "10.132.2.3/23"
+    preprod_address_prefix  = "10.132.4.0/23"
+    prod_address_prefix     = "10.132.6.0/23"
+    identity_address_prefix = "10.132.10.0/25"
   }
   gss = {
-    test_address_prefix     = "10.20.0.0/24"
-    preprod_address_prefix  = "10.21.0.0/24"
-    prod_address_prefix     = "10.22.0.0/24"
-    identity_address_prefix = "10.20.100.0/24"
+    dev_address_prefix      = "10.132.16.0/23"
+    test_address_prefix     = "10.132.18.0/23"
+    preprod_address_prefix  = "10.132.20.0/23"
+    prod_address_prefix     = "10.132.22.0/23"
+    identity_address_prefix = "10.132.26.0/25"
   }
   wsl = {
-    test_address_prefix     = "10.30.0.0/24"
-    preprod_address_prefix  = "10.31.0.0/24"
-    prod_address_prefix     = "10.32.0.0/24"
-    identity_address_prefix = "10.30.100.0/24"
+    dev_address_prefix      = "10.132.32.0/23"
+    test_address_prefix     = "10.132.34.0/23"
+    preprod_address_prefix  = "10.132.36.0/23"
+    prod_address_prefix     = "10.132.38.0/23"
+    identity_address_prefix = "10.132.42.0/25"
   }
 }

@@ -92,8 +92,9 @@ variable "tags" {
 }
 
 # ─── Stamps ───────────────────────────────────────────────────────────────────
-# Each stamp represents a customer environment: 3 workload VNets + 1 identity spoke.
-# Four IP Groups are created per stamp:
+# Each stamp represents a customer environment with five workload tiers + 1 identity spoke.
+# Five IP Groups are created per stamp:
+#   "<key>-dev"      → developer workload VNet CIDR
 #   "<key>-test"      → test workload VNet CIDR
 #   "<key>-preprod"   → pre-production workload VNet CIDR
 #   "<key>-prod"      → production workload VNet CIDR
@@ -102,6 +103,7 @@ variable "tags" {
 
 variable "stamps" {
   type = map(object({
+    dev_address_prefix      = string
     test_address_prefix     = string
     preprod_address_prefix  = string
     prod_address_prefix     = string
@@ -109,7 +111,7 @@ variable "stamps" {
   }))
   description = <<DESCRIPTION
 Map of stamps (customer environments) managed by this firewall.
-Each stamp creates four IP Groups: "<key>-test", "<key>-preprod", "<key>-prod", "<key>-identity".
+Each stamp creates five IP Groups: "<key>-dev", "<key>-test", "<key>-preprod", "<key>-prod", "<key>-identity".
 DESCRIPTION
 }
 
