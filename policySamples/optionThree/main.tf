@@ -1,4 +1,4 @@
-# Option 3A: Direct rule declaration approach - no complex templates
+# Option 3: Direct rule declaration approach - per-rule source_addresses for full granularity
 
 resource "azurerm_resource_group" "azfw-rg" {
   location = var.location
@@ -34,11 +34,11 @@ module "rule_collection_groups" {
       rule = [
         for rule in collection.rules : {
           name                  = rule.name
-          source_addresses      = each.value.source_addresses  # Now supports multiple addresses
-          destination_fqdns     = rule.destination_fqdns
-          destination_addresses = rule.destination_addresses
+          source_addresses      = rule.source_addresses
+          destination_fqdns     = try(rule.destination_fqdns, null)
+          destination_addresses = try(rule.destination_addresses, null)
           protocols             = rule.protocols
-          destination_ports     = rule.destination_ports != null ? rule.destination_ports : []
+          destination_ports     = try(rule.destination_ports, null)
         }
       ]
     }
@@ -53,9 +53,9 @@ module "rule_collection_groups" {
       rule = [
         for rule in collection.rules : {
           name                  = rule.name
-          source_addresses      = each.value.source_addresses  # Now supports multiple addresses
-          destination_fqdns     = rule.destination_fqdns
-          destination_fqdn_tags = rule.destination_fqdn_tags
+          source_addresses      = rule.source_addresses
+          destination_fqdns     = try(rule.destination_fqdns, null)
+          destination_fqdn_tags = try(rule.destination_fqdn_tags, null)
           protocols             = rule.protocols
         }
       ]
@@ -70,13 +70,13 @@ module "rule_collection_groups" {
       priority = collection.priority
       rule = [
         for rule in collection.rules : {
-          name               = rule.name
-          source_addresses   = rule.source_addresses != null ? rule.source_addresses : each.value.source_addresses
+          name                = rule.name
+          source_addresses    = rule.source_addresses
           destination_address = rule.destination_address
-          destination_ports  = rule.destination_ports
-          translated_address = rule.translated_address
-          translated_port    = rule.translated_port
-          protocols          = rule.protocols
+          destination_ports   = rule.destination_ports
+          translated_address  = rule.translated_address
+          translated_port     = rule.translated_port
+          protocols           = rule.protocols
         }
       ]
     }
