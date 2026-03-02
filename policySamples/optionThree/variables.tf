@@ -1,4 +1,9 @@
-# Option 3: Modular approach with rule templates
+# Option 3: Variable definitions
+variable "subscription_id" {
+  type        = string
+  description = "The Azure subscription ID to deploy resources into."
+}
+
 variable "enable_telemetry" {
   type        = bool
   default     = true
@@ -11,36 +16,34 @@ DESCRIPTION
 
 variable "location" {
   type        = string
-  default     = "australiaeast"
-  description = "The Azure region where resources will be deployed"
+  default     = "newzealandnorth"
+  description = "The Azure region where resources will be deployed."
 }
 
 variable "firewall_policy_name" {
   type        = string
-  default     = "azfw-policy-option3"
-  description = "The name of the firewall policy"
+  description = "The name of the firewall policy."
 }
 
 variable "resource_group_name" {
   type        = string
-  default     = "azfwpolicy-rg-option3"
-  description = "The name of the resource group"
+  description = "The name of the resource group."
 }
 
 variable "firewall_rules" {
   type = map(object({
-    priority        = number
-    source_addresses = list(string)  # Changed from source_subnet to support multiple sources
+    priority = number
     network_collections = optional(list(object({
       action   = string
       name     = string
       priority = number
       rules = list(object({
         name                  = string
+        source_addresses      = list(string)
         destination_fqdns     = optional(list(string))
         destination_addresses = optional(list(string))
         protocols             = list(string)
-        destination_ports     = optional(list(string))  # Made optional for ICMP and other protocols
+        destination_ports     = optional(list(string))
       }))
     })), [])
     application_collections = optional(list(object({
@@ -49,6 +52,7 @@ variable "firewall_rules" {
       priority = number
       rules = list(object({
         name                  = string
+        source_addresses      = list(string)
         destination_fqdns     = optional(list(string))
         destination_fqdn_tags = optional(list(string))
         protocols = list(object({
@@ -58,19 +62,19 @@ variable "firewall_rules" {
       }))
     })), [])
     nat_collections = optional(list(object({
-      action   = string  # Typically "Dnat"
+      action   = string
       name     = string
       priority = number
       rules = list(object({
-        name               = string
-        source_addresses   = optional(list(string))  # Override source if needed per rule
-        destination_address = string                 # Public IP address
-        destination_ports  = list(string)
-        translated_address = string                  # Internal IP address
-        translated_port    = string                  # Internal port
-        protocols          = list(string)
+        name                = string
+        source_addresses    = list(string)
+        destination_address = string
+        destination_ports   = list(string)
+        translated_address  = string
+        translated_port     = string
+        protocols           = list(string)
       }))
     })), [])
   }))
-  description = "Firewall rules configuration with direct rule declarations. Now supports multiple source addresses and optional destination ports."
+  description = "Map of firewall rule collection groups. source_addresses is defined per-rule for full granularity across network, application, and NAT collections."
 }
