@@ -21,5 +21,7 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id = var.subscription_id
+  # subscription_id is sourced from the ARM_SUBSCRIPTION_ID environment variable.
+  # In CI this is set via the ARM_SUBSCRIPTION_ID env var in the workflow.
+  # Locally: $env:ARM_SUBSCRIPTION_ID = "<your-subscription-id>"
 }
