@@ -28,8 +28,9 @@ firewall_sku_tier = "Standard"
 firewall_zones = null
 
 # ─── Diagnostics ───────────────────────────────────────────────────────────────
-# Replace with the actual resource ID of your Log Analytics Workspace.
-log_analytics_workspace_id = "/subscriptions/a97e5e9d-4ea4-427a-8646-8ab65ea003a5/resourceGroups/dc-poc/providers/Microsoft.OperationalInsights/workspaces/poc-law"
+# log_analytics_workspace_id is sourced from the TF_VAR_log_analytics_workspace_id
+# environment variable. In CI this is set via the LOG_ANALYTICS_WORKSPACE_ID repo secret.
+# Locally: $env:TF_VAR_log_analytics_workspace_id = "<resource-id>"
 
 # ─── Tags ──────────────────────────────────────────────────────────────────────
 # These are merged with the mandatory tags defined in locals.tf.
