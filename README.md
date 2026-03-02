@@ -1,144 +1,96 @@
-# Azure Firewall Policy Configuration Options
+# Azure Firewall Policy — Configuration Samples
 
-This repository provides three different approaches to parameterize Azure Firewall Policy rules and rule collections, each optimized for different use cases and team structures.
+This repository contains three sample approaches for managing Azure Firewall Policy rules with Terraform. Each targets a different operational model and team preference.
 
-## 📊 **Option Comparison**
+## Option Comparison
 
-| Option | Approach | Best For | Complexity | Maintainability | Scalability |
-|--------|----------|----------|------------|-----------------|-------------|
-| **Option 1** | Complex-ish Variables | <80 Rules | High | Low | Average |
-| **Option 2** ⭐ | YAML Files | Most scenarios | Low | High | Excellent |
-| **Option 3** | Rule Templates | Standardized patterns | Medium | Medium | Great |
+| Option | Approach | Best For | Complexity | Maintainability |
+|--------|----------|----------|------------|-----------------|
+| Option 1 | HCL Variables | Small, static rule sets | High | Low |
+| Option 2 | YAML Files | Most scenarios | Low | High |
+| Option 3 | tfvars-driven templates | Standardised, repeatable patterns | Medium | Medium |
 
-## 🚀 **Quick Start Guides**
+## Option 1 — Variable-based Configuration
 
-### **Option 1 (Variable-based Configuration)**
+Rules are defined directly as Terraform variable values in `terraform.tfvars`. All rule structure is expressed in HCL.
+
+Works well for small, relatively static rule sets where the team is comfortable with Terraform. Becomes difficult to manage as rule counts grow.
 
 ```powershell
-# Navigate to Option 1
-cd optionOne
-
-# Deploy with complex Terraform variables
+cd policySamples/optionOne
 terraform init
 terraform plan -var-file="terraform.tfvars"
 terraform apply -var-file="terraform.tfvars"
 ```
 
-### **Option 2 (YAML Configuration)** ⭐ **RECOMMENDED**
+## Option 2 — YAML Configuration
+
+Rules are maintained in YAML files, parsed at plan time via Terraform's `yamldecode`. Infrastructure engineers own the Terraform; security teams can manage rules without touching HCL.
+
+Supports separate YAML files per environment and includes a PowerShell validation script to catch errors before a plan.
 
 ```powershell
-# Navigate to Option 2
-cd optionTwo
+cd policySamples/optionTwo
 
-# Validate configuration (optional)
+# Optional pre-flight validation
 .\validate-firewall-rules.ps1 -YamlFile "firewall_rules.yaml"
 
-# Deploy with main configuration
 terraform init
 terraform plan -var-file="terraform.tfvars"
 terraform apply -var-file="terraform.tfvars"
 
-# Environment-specific deployments
-terraform apply -var-file="terraform_nonprod.tfvars"  # Non-production
-terraform apply -var-file="terraform_prod.tfvars"    # Production
+# Environment-specific
+terraform apply -var-file="terraform_nonprod.tfvars"
+terraform apply -var-file="terraform_prod.tfvars"
 ```
 
-### **Option 3 (Template-based Configuration)**
+## Option 3 — tfvars-driven Templates
+
+Rules and rule collection groups are defined entirely in `firewall_rules.tfvars`. Network segments are abstracted into IP Groups, referenced by key in rule definitions rather than by CIDR. Stamps (customer or environment segments) are declared once and resolved to Azure IP Group IDs at plan time.
+
+Good fit for multi-tenant or multi-segment hub networks where the same rule patterns apply across multiple environments.
 
 ```powershell
-# Navigate to Option 3
-cd optionThree
-
-# Deploy with rule templates
+cd policySamples/optionThree
 terraform init
-terraform plan -var-file="terraform.tfvars"
-terraform apply -var-file="terraform.tfvars"
+terraform plan -var-file="terraform.tfvars" -var-file="firewall_rules.tfvars"
+terraform apply -var-file="terraform.tfvars" -var-file="firewall_rules.tfvars"
 ```
 
-## 🎯 **Which Option Should I Choose?**
-
-### **Choose Option 2 (YAML)** ⭐ **RECOMMENDED** if you want:
-- ✅ Easy rule management for security teams
-- ✅ Environment-specific configurations (nonprod/prod)
-- ✅ Clean separation of rules and infrastructure code
-- ✅ Best scalability for growing rule sets
-- ✅ Human-readable, version-control friendly configuration
-
-### **Choose Option 1 (Variables)** if you have:
-- Small, unchanging rule sets (< 80 rules)
-- Team has good TF skills
-- Need for maximum type safety and validation
-- Preference for pure Terraform approach
-
-### **Choose Option 3 (Templates)** if you need:
-- Standardized, repeatable rule patterns
-- Network segment abstraction
-- Compositional approach to rule management
-- Selective enabling/disabling of rule groups - Cool feature!
-
-## 📖 **Getting Started**
-
-1. **Choose** your preferred option using the comparison above
-2. **Navigate** to your chosen option directory
-3. **Read** the option-specific README.md for detailed instructions
-4. **Customize** the configuration files for your environment
-5. **Deploy** using the provided commands
-
-## 📁 **Repository Structure**
+## Repository Structure
 
 ```
-factory/
-├── optionOne/                      # Variable-based configuration
-│   ├── main.tf                     # Terraform configuration with for_each
-│   ├── variables.tf                # Complex variable definitions
-│   ├── terraform.tfvars            # Rule configuration in variables
-│   └── README.md                   # Option 1 detailed guide
-├── optionTwo/                      # 🏆 YAML-based configuration (RECOMMENDED)
-│   ├── main.tf                     # YAML parsing implementation
-│   ├── variables.tf                # Simple variables
-│   ├── locals.tf                   # YAML loading logic
-│   ├── terraform.tfvars            # Basic deployment values
-│   ├── terraform_nonprod.tfvars    # Non-production environment
-│   ├── terraform_prod.tfvars       # Production environment
-│   ├── firewall_rules.yaml         # Main rule configuration
-│   ├── firewall_rules_nonprod.yaml # Non-production rules
-│   ├── firewall_rules_prod.yaml    # Production rules
-│   ├── validate-firewall-rules.ps1 # Validation script
-│   └── README.md                   # Option 2 detailed guide
-├── optionThree/                    # Template-based configuration
-│   ├── main.tf                     # Template-based implementation
-│   ├── variables.tf                # Template control variables
-│   ├── locals.tf                   # Rule templates and logic
-│   ├── terraform.tfvars            # Template configuration
-│   └── README.md                   # Option 3 detailed guide
-└── README.md                       # This overview file
+policySamples/
+├── optionOne/
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── terraform.tfvars
+│   └── README.md
+├── optionTwo/
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── locals.tf
+│   ├── terraform.tfvars
+│   ├── terraform_nonprod.tfvars
+│   ├── terraform_prod.tfvars
+│   ├── firewall_rules.yaml
+│   ├── firewall_rules_nonprod.yaml
+│   ├── firewall_rules_prod.yaml
+│   ├── validate-firewall-rules.ps1
+│   └── README.md
+└── optionThree/
+    ├── main.tf
+    ├── variables.tf
+    ├── locals.tf
+    ├── terraform.tfvars
+    ├── firewall_rules.tfvars
+    └── README.md
 ```
 
-## 🏆 **Why Option 2 is Recommended**
+## Prerequisites
 
-Option 2 (YAML Configuration) strikes the perfect balance between:
-- **Simplicity** - Easy to understand and modify
-- **Flexibility** - Environment-specific configurations
-- **Maintainability** - Clean separation of concerns
-- **Accessibility** - Non-Terraform users can manage rules
-- **Scalability** - Handles large rule sets gracefully
+- Terraform >= 1.9.0
+- An Azure subscription
+- Set `subscription_id` in the relevant `terraform.tfvars` before deploying
 
-For most organizations, Option 2 provides the best long-term solution for managing Azure Firewall policies.
-
-## 🔧 **Common Configuration**
----
-
-## ⚠️ Required: Azure Subscription ID
-
-Before deploying any option, edit the relevant `terraform.tf` file and set the `subscription_id` value in the `provider "azurerm"` block to your Azure Subscription ID.
-
-All options deploy to:
-- **Location**: Australia East
-- **Resource Groups**: `azfwpolicy-rg-option[1-3]`
-- **Firewall Policy Names**: `azfw-policy-option[1-3]`
-- **AVM Modules**: Uses official Azure Verified Modules
-
-All options deploy to:
-- **Location**: Australia East
-- **Naming Convention**: `azfw-policy-option[1-3]`
-- **AVM Modules**: Uses official Azure Verified Modules
+All samples use [Azure Verified Modules (AVM)](https://aka.ms/avm) for the Firewall Policy resource.

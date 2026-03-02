@@ -5,7 +5,7 @@ location         = "newzealandnorth"
 # ─── Naming Convention ─────────────────────────────────────────────────────────
 # Produces: <shortcode>-<app_code>-<environment_code>-<location_code>-01
 # e.g. azfw-gis-prod-nzn-01
-app_code         = "gis"
+app_code         = "hub"
 environment_code = "prod"
 location_code    = "nzn"
 

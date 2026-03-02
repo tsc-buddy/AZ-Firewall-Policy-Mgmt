@@ -1,8 +1,8 @@
 locals {
   # ─── Naming Convention ──────────────────────────────────────────────────────
-  # Pattern : <shortcode>-<app_code>-hub-<environment_code>-<location_code>-01
+  # Pattern : <resourceCode>-<app_code>-<environment_code>-<location_code>-01
   # Set app_code, environment_code, and location_code in terraform.tfvars.
-  name_suffix = "${var.app_code}-hub-${var.environment_code}-${var.location_code}-01"
+  name_suffix = "${var.app_code}-${var.environment_code}-${var.location_code}-01" 
 
   names = {
     resource_group  = "rg-${local.name_suffix}"
@@ -20,10 +20,8 @@ locals {
 
   # ─── Mandatory Tags ─────────────────────────────────────────────────────────
   mandatory_tags = {
-    managed_by  = "terraform"
     environment = var.environment_code
-    workload    = "hub-network"
-    customer    = "akl-council"
+    function    = "hub-network"
   }
 
   tags = merge(local.mandatory_tags, var.tags)
