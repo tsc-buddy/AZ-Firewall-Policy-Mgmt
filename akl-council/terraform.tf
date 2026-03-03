@@ -1,15 +1,13 @@
 terraform {
   required_version = ">= 1.9.0"
 
-  backend "azurerm" {
-    # All values are supplied at runtime via -backend-config flags in CI.
-    # To initialise locally, run:
-    #   terraform init \
-    #     -backend-config="resource_group_name=<rg>" \
-    #     -backend-config="storage_account_name=<sa>" \
-    #     -backend-config="container_name=tfstate" \
-    #     -backend-config="key=akl-council/terraform.tfstate"
-  }
+  # Using local state for now. To switch to remote state, replace with:
+  # backend "azurerm" {
+  #   resource_group_name  = "rg-tfstate-gis-prod-nzn-01"
+  #   storage_account_name = "satfstategisprod"
+  #   container_name       = "tfstate"
+  #   key                  = "akl-council/terraform.tfstate"
+  # }
 
   required_providers {
     azurerm = {

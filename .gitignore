@@ -1,0 +1,26 @@
+# Terraform state — never commit; use remote state (Azure Storage) instead
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Terraform plan output — contains raw resource diffs and may include sensitive data
+tfplan
+*.tfplan
+
+# Local variable overrides — for real subscription IDs, workspace IDs, etc.
+# Create terraform.local.tfvars locally and supply via: -var-file="terraform.local.tfvars"
+*.local.tfvars
+
+# Terraform working directory
+.terraform/
+.terraform.lock.hcl
+
+# Crash and debug logs
+crash.log
+crash.*.log
+
+# Override files (Terraform pattern)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

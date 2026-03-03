@@ -40,50 +40,50 @@ firewall_rules = {
         action   = "Allow"
         rules = [
 
-          # TCP: full AD port set (Windows Server 2008+ column from MS doc)
+          # TCP: all ports open during build mode (tighten post-build)
           {
             name                      = "aklc-Workload-to-Identity-TCP"
             source_ip_group_keys      = ["aklc-test", "aklc-preprod", "aklc-prod"]
             destination_ip_group_keys = ["aklc-identity"]
             protocols                 = ["TCP"]
-            destination_ports         = ["53", "88", "135", "389", "445", "464", "636", "3268", "3269", "9389", "49152-65535"]
+            destination_ports         = ["*"]
           },
           {
             name                      = "gss-Workload-to-Identity-TCP"
             source_ip_group_keys      = ["gss-test", "gss-preprod", "gss-prod"]
             destination_ip_group_keys = ["gss-identity"]
             protocols                 = ["TCP"]
-            destination_ports         = ["53", "88", "135", "389", "445", "464", "636", "3268", "3269", "9389", "49152-65535"]
+            destination_ports         = ["*"]
           },
           {
             name                      = "wsl-Workload-to-Identity-TCP"
             source_ip_group_keys      = ["wsl-test", "wsl-preprod", "wsl-prod"]
             destination_ip_group_keys = ["wsl-identity"]
             protocols                 = ["TCP"]
-            destination_ports         = ["53", "88", "135", "389", "445", "464", "636", "3268", "3269", "9389", "49152-65535"]
+            destination_ports         = ["*"]
           },
 
-          # UDP: Kerberos, DNS, NTP, LDAP, Kerberos password change
+          # UDP: all ports open during build mode (tighten post-build)
           {
             name                      = "aklc-Workload-to-Identity-UDP"
             source_ip_group_keys      = ["aklc-test", "aklc-preprod", "aklc-prod"]
             destination_ip_group_keys = ["aklc-identity"]
             protocols                 = ["UDP"]
-            destination_ports         = ["53", "88", "123", "389", "464"]
+            destination_ports         = ["*"]
           },
           {
             name                      = "gss-Workload-to-Identity-UDP"
             source_ip_group_keys      = ["gss-test", "gss-preprod", "gss-prod"]
             destination_ip_group_keys = ["gss-identity"]
             protocols                 = ["UDP"]
-            destination_ports         = ["53", "88", "123", "389", "464"]
+            destination_ports         = ["*"]
           },
           {
             name                      = "wsl-Workload-to-Identity-UDP"
             source_ip_group_keys      = ["wsl-test", "wsl-preprod", "wsl-prod"]
             destination_ip_group_keys = ["wsl-identity"]
             protocols                 = ["UDP"]
-            destination_ports         = ["53", "88", "123", "389", "464"]
+            destination_ports         = ["*"]
           },
         ]
       },
@@ -376,6 +376,53 @@ firewall_rules = {
               "login.windows.net",
               "*.events.data.microsoft.com",
             ]
+            protocols = [
+              { port = 443, type = "Https" },
+            ]
+          },
+        ]
+      },
+    ]
+  }
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # workload_egress  (priority 3000)
+  #   - Outbound HTTP/HTTPS from all workload VNets to the internet.
+  #   - Wildcard FQDN (*) permits all internet destinations; tighten to specific
+  #     FQDNs or web categories (Premium policy) once traffic patterns are known.
+  # ───────────────────────────────────────────────────────────────────────────
+
+  workload_egress = {
+    priority = 3000
+
+    application_collections = [
+
+      # ── Workload → Internet (HTTP/HTTPS) ────────────────────────────────────
+      {
+        name     = "Workload-Internet-Egress"
+        priority = 100
+        action   = "Allow"
+        rules = [
+          {
+            name                 = "AllWorkloads-Internet-HTTP"
+            source_ip_group_keys = [
+              "aklc-test", "aklc-preprod", "aklc-prod",
+              "gss-test",  "gss-preprod",  "gss-prod",
+              "wsl-test",  "wsl-preprod",  "wsl-prod",
+            ]
+            destination_fqdns = ["*"]
+            protocols = [
+              { port = 80,  type = "Http"  },
+            ]
+          },
+          {
+            name                 = "AllWorkloads-Internet-HTTPS"
+            source_ip_group_keys = [
+              "aklc-test", "aklc-preprod", "aklc-prod",
+              "gss-test",  "gss-preprod",  "gss-prod",
+              "wsl-test",  "wsl-preprod",  "wsl-prod",
+            ]
+            destination_fqdns = ["*"]
             protocols = [
               { port = 443, type = "Https" },
             ]
